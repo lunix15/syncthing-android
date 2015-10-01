@@ -10,14 +10,14 @@ if [ ! -e "ext/syncthing/src/github.com/syncthing/syncthing/.git" ]; then
 fi
 
 # Check for GOLANG installation
-if [ -z $GOROOT ] || [[ $(go version) != go\ version\ go1.4* ]] ; then
+if [ -z $GOROOT ] || [[ $(go version) != go\ version\ go1.5* ]] ; then
         mkdir -p "build"
         tmpgo='build/go'
         if [ ! -f "$tmpgo/bin/go" ]; then
-                # Download GOLANG v1.4.2
-                wget -O go.src.tar.gz http://golang.org/dl/go1.4.2.src.tar.gz
+                # Download GOLANG v1.5.1
+                wget -O go.src.tar.gz https://golang.org/dl/go1.5.1.src.tar.gz
                 sha1=$(sha1sum go.src.tar.gz)
-                if [ "$sha1" != "460caac03379f746c473814a65223397e9c9a2f6  go.src.tar.gz" ]; then
+                if [ "$sha1" != "0df564746d105f4180c2b576a1553ebca9d9a124  go.src.tar.gz" ]; then
                         echo "go.src.tar.gz SHA1 checksum does not match!"
                         exit 1
                 fi
@@ -41,7 +41,7 @@ export CGO_ENABLED=0
 # Check whether GOLANG is compiled with cross-compilation for 386
 if [ ! -f $GOROOT/bin/linux_386/go ]; then
         pushd $GOROOT/src
-        # Build GO for cross-compilation
+        # Build Go for cross-compilation
         GOOS=linux GOARCH=386 GO386=387 ./make.bash --no-clean
         popd
 fi
@@ -49,7 +49,7 @@ fi
 # Check whether GOLANG is compiled with cross-compilation for arm
 if [ ! -f $GOROOT/bin/linux_arm/go ]; then
         pushd $GOROOT/src
-        # Build GO for cross-compilation
+        # Build Go for cross-compilation
         GOOS=linux GOARCH=arm GOARM=5 ./make.bash --no-clean
         popd
 fi
