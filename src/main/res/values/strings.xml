@@ -30,6 +30,10 @@
 
     <string name="off">off</string>
 
+    <string name="open_website">Open Website</string>
+
+    <string name="toast_write_storage_permission_required">Write storage permission is required for this app</string>
+
     <!-- FoldersFragment -->
 
 
@@ -107,9 +111,6 @@
 
     <!-- Setting title -->
     <string name="devices">Devices</string>
-
-    <!-- Setting title -->
-    <string name="file_versioning">File Versioning</string>
 
     <!-- Setting title -->
     <string name="keep_versions">Keep Versions</string>
@@ -244,6 +245,10 @@ Please report any problems you encounter via Github.</string>
     <string name="use_root_title">Sync as Root</string>
 
     <string name="use_root_summary">Run Syncthing as Superuser</string>
+
+    <string name="root_dialog_title">Are you sure you want to enable root?</string>
+
+    <string name="root_dialog_message">This may cause various problems with Syncthing and with your device. Use at your own risk.</string>
 
     <string name="notification_type_title">Notification</string>
 

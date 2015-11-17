@@ -2,6 +2,7 @@ package com.nutomic.syncthingandroid.fragments;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
@@ -86,6 +87,7 @@ public class SettingsFragment extends PreferenceFragment
             }
 
             Preference address = mGuiScreen.findPreference(ADDRESS);
+            address.setOnPreferenceChangeListener(this);
             applyPreference(address, api.getValue(RestApi.TYPE_GUI, ADDRESS));
         }
     }
@@ -142,7 +144,7 @@ public class SettingsFragment extends PreferenceFragment
         mAlwaysRunInBackground.setOnPreferenceChangeListener(this);
         mSyncOnlyCharging.setOnPreferenceChangeListener(this);
         mSyncOnlyWifi.setOnPreferenceChangeListener(this);
-        mUseRoot.setOnPreferenceChangeListener(this);
+        mUseRoot.setOnPreferenceClickListener(this);
         screen.findPreference(EXPORT_CONFIG).setOnPreferenceClickListener(this);
         screen.findPreference(IMPORT_CONFIG).setOnPreferenceClickListener(this);
         screen.findPreference(SYNCTHING_RESET).setOnPreferenceClickListener(this);
@@ -227,9 +229,7 @@ public class SettingsFragment extends PreferenceFragment
 
         boolean requireRestart = false;
 
-        if (preference.equals(mSyncOnlyCharging) || preference.equals(mSyncOnlyWifi)) {
-            mSyncthingService.updateState();
-        } else if (preference.equals(mAlwaysRunInBackground)) {
+        if (preference.equals(mAlwaysRunInBackground)) {
             boolean value = (Boolean) o;
             preference.setSummary((value)
                     ? R.string.always_run_in_background_enabled
@@ -240,14 +240,6 @@ public class SettingsFragment extends PreferenceFragment
             if (!value) {
                 mSyncOnlyCharging.setChecked(false);
                 mSyncOnlyWifi.setChecked(false);
-            }
-        } else if (preference.equals(mUseRoot)) {
-            if ((Boolean) o) {
-                new TestRootTask().execute();
-                return false;
-            } else {
-                new Thread(new ChownFilesRunnable()).start();
-                requireRestart = true;
             }
         } else if (preference.getKey().equals(DEVICE_NAME_KEY)) {
             RestApi.Device old = mSyncthingService.getApi().getLocalDevice();
@@ -320,6 +312,27 @@ public class SettingsFragment extends PreferenceFragment
     @Override
     public boolean onPreferenceClick(Preference preference) {
         switch (preference.getKey()) {
+            case SyncthingService.PREF_USE_ROOT:
+                if (mUseRoot.isChecked()) {
+                    // Only check preference after dialog was confirmed and root was granted.
+                    mUseRoot.setChecked(false);
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle(R.string.root_dialog_title)
+                            .setMessage(R.string.root_dialog_message)
+                            .setPositiveButton(android.R.string.yes,
+                                    new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    new TestRootTask().execute();
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, null)
+                            .show();
+                } else {
+                    new Thread(new ChownFilesRunnable()).start();
+                    mSyncthingService.getApi().requireRestart(getActivity());
+                }
+                return true;
             case EXPORT_CONFIG:
                 new AlertDialog.Builder(getActivity())
                         .setMessage(R.string.dialog_confirm_export)
@@ -359,7 +372,25 @@ public class SettingsFragment extends PreferenceFragment
                         .show();
                 return true;
             case SYNCTHING_RESET:
-                ((SyncthingActivity) getActivity()).getApi().resetSyncthing(getActivity());
+                final Intent intent = new Intent(getActivity(), SyncthingService.class)
+                        .setAction(SyncthingService.ACTION_RESET);
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(R.string.streset_title)
+                        .setMessage(R.string.streset_question)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                getActivity().startService(intent);
+                                Toast.makeText(getActivity(), R.string.streset_done, Toast.LENGTH_LONG).show();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                            }
+                        })
+                        .show();
                 return true;
             default:
                 return false;

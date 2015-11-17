@@ -360,32 +360,6 @@ public class RestApi implements SyncthingService.OnWebGuiAvailableListener,
     }
 
     /**
-     * Reset Syncthing's indexes when confirmed by a dialog.
-     *
-     * TODO: why is this here and not in fragment?
-     */
-    public void resetSyncthing(final Activity activity) {
-        final Intent intent = new Intent(mContext, SyncthingService.class)
-                .setAction(SyncthingService.ACTION_RESET);
-
-        new AlertDialog.Builder(activity)
-                .setTitle(R.string.streset_title)
-                .setMessage(R.string.streset_question)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        mContext.startService(intent);
-                        Toast.makeText(activity, R.string.streset_done, Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) { }
-                })
-                .show();
-    }
-
-    /**
      * Returns a list of all existing devices.
      *
      * @param includeLocal True if the local device should be included in the result.
@@ -440,9 +414,14 @@ public class RestApi implements SyncthingService.OnWebGuiAvailableListener,
                     SystemInfo si = new SystemInfo();
                     si.alloc = system.getLong("alloc");
                     si.cpuPercent = system.getDouble("cpuPercent");
-                    si.extAnnounceTotal = system.getInt("discoveryMethods");
-                    si.extAnnounceConnected =
+                    if (system.has("discoveryEnabled")) {
+                        si.extAnnounceTotal = system.getInt("discoveryMethods");
+                        si.extAnnounceConnected =
                             si.extAnnounceTotal - system.getJSONObject("discoveryErrors").length();
+                    } else {
+                        si.extAnnounceTotal = 0;
+                        si.extAnnounceConnected = 0;
+                    }
                     si.goroutines = system.getInt("goroutines");
                     si.myID = system.getString("myID");
                     si.sys = system.getLong("sys");
